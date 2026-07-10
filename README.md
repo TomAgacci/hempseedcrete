@@ -1,3 +1,5 @@
+Licensed Under Creative Commons Attribution Open Source
+
 You can make seedcrete (hemp‑seed‑based hempcrete) stronger—but you’ll be trading away some lightness and insulation to get there, and even a “strong” seedcrete is still not conventional structural concrete.
 
 Here are the main levers:
@@ -12,3 +14,7 @@ Treat seed oil/powder as a secondary binder, not the main one:
 Your Tama‑style seedcrete can still use hemp seed oil + powder as a hybrid organic phase, but the real compressive strength will come from the mineral binder (lime/MgO) and how dense and well‑compacted the mix is.
 
 Even with all that, “strong” hemp/seedcrete in the literature tops out around the low‑MPa range—much better than fluffy infill, but still below typical structural concrete—so for multi‑story, 10‑ft‑wall ideas, it’s safer to keep seedcrete as infill/insulation around a real frame, and let the exoskeleton carry the serious loads.
+
+www.thingiverse.com/thing:7134803
+
+www.thingiverse.com/thing:6090298

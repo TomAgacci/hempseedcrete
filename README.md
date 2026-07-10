@@ -1,5 +1,17 @@
 Licensed Under Creative Commons Attribution Open Source
 
+Short version: even with your strongest lime‑based hemp seedcrete, pure hempcrete blocks are still a low‑strength, low‑stiffness masonry—not concrete.
+
+For 300×600×200 mm hempseedcrete blocks used as the only load‑bearing support:
+
+Toy, optimistic math:  
+With ~3–6 MPa compressive strength, vertical stresses from 2–3 stories are in the right ballpark.
+
+Realistic, engineering‑honest answer:  
+Because hempcrete creeps, is relatively soft, and is usually not detailed like structural masonry, you’re still in ~1–2 stories max for pure hempcrete load‑bearing walls if you want real stability and safety.
+
+That’s why real systems (IsoHemp, etc.) use concrete or reinforced frames and keep hempcrete as infill—that’s how they reach 3–4 stories. For anything beyond 1–2 stories on pure hempseedcrete blocks, you’d absolutely need a structural engineer to design and sign off.
+
 You can make seedcrete (hemp‑seed‑based hempcrete) stronger—but you’ll be trading away some lightness and insulation to get there, and even a “strong” seedcrete is still not conventional structural concrete.
 
 Here are the main levers:

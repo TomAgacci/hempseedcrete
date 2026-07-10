@@ -1,22 +1,5 @@
 Licensed Under Creative Commons Attribution Open Source
 
-3. The honest “highest” without an engineer
-If we stay in your freemason‑toy, no‑engineer world and still respect physics:
-
-As built (10×10 mm aluminum exoskeleton + inner pillars + seedcrete infill):  
-I’d call it ~1 story max at human scale.
-
-If you redesign the frame with real columns (≈25–30 mm square), full diagonal bracing, and seedcrete only as infill:  
-Then ~3–5 stories is a reasonable conceptual upper bound,
-and ~5–8 stories is the optimistic toy ceiling that lines up with Grok’s claim.
-
-Short version: even with your strongest lime‑based hemp seedcrete, pure hempcrete blocks are still a low‑strength, low‑stiffness masonry—not concrete.
-
-For 300×600×200 mm hempseedcrete blocks used as the only load‑bearing support:
-
-Toy, optimistic math:  
-With ~3–6 MPa compressive strength, vertical stresses from 2–3 stories are in the right ballpark.
-
 Realistic, engineering‑honest answer:  
 Because hempcrete creeps, is relatively soft, and is usually not detailed like structural masonry, you’re still in ~1–2 stories max for pure hempcrete load‑bearing walls if you want real stability and safety.
 

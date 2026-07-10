@@ -1,4 +1,8 @@
 Licensed Under Creative Commons Attribution Open Source
+5-8 stories on the exoskletons is the most realistic number.
+Arouns 3-5 stories of regular seed crete blocks in the highest strength
+
+Weaker mixes are easier.
 
 Realistic, engineering‑honest answer:  
 Because hempcrete creeps, is relatively soft, and is usually not detailed like structural masonry, you’re still in ~1–2 stories max for pure hempcrete load‑bearing walls if you want real stability and safety.

@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+"""
+Tama-style material renderer for hemp-seed-oil / lime hybrid binder.
+
+Features:
+- Mix design ratios
+- Time-dependent curing model
+- Failure-mode classifier
+- Parameter sweep over time and mix regimes
+"""
+
+from dataclasses import dataclass
+from typing import List, Dict
+import math
+
+@dataclass
+class MixDesign:
+    m_L: float   # lime mass
+    m_S: float   # seed powder mass
+    m_O: float   # hemp seed oil mass
+    phi0: float  # initial porosity
+    P_c: float   # curing pressure (MPa)
+
+@dataclass
+class ModelConstants:
+    # Binder efficiencies
+    alpha_L: float = 1.0
+    alpha_O: float = 0.6
+    alpha_S: float = 0.3
+
+    # Porosity response
+    k_P: float = 0.10   # porosity reduction per MPa
+    k_O: float = 0.15   # porosity reduction per R_OL
+
+    # Strength scaling
+    C1: float = 10.0    # compressive strength scale
+    C2: float = 5.0     # flexural strength scale
+    beta: float = 2.0   # porosity penalty
+    gamma: float = 1.5  # toughness boost from organic phase
+
+    # Time-dependent curing constants (heuristic)
+    k_L: float = 0.15   # lime carbonation rate (1/day)
+    k_O_poly: float = 0.10  # oil polymerization rate (1/day)
+    k_phi: float = 0.05     # porosity decay rate (1/day)
+    k_flex: float = 0.12    # flexural strength growth rate (1/day)
+
+def compute_ratios(mix: MixDesign):
+    m_L, m_S, m_O = mix.m_L, mix.m_S, mix.m_O
+    R_SL = m_S / m_L if m_L > 0 else 0.0
+    R_OL = m_O / m_L if m_L > 0 else 0.0
+    R_OS = m_O / m_S if m_S > 0 else 0.0
+    return R_SL, R_OL, R_OS
+
+def binder_eff(mix: MixDesign, const: ModelConstants):
+    return (const.alpha_L * mix.m_L +
+            const.alpha_O * mix.m_O +
+            const.alpha_S * mix.m_S)
+
+def porosity_t(mix: MixDesign, const: ModelConstants, t_days: float):
+    _, R_OL, _ = compute_ratios(mix)
+    phi_base = mix.phi0 - const.k_P * mix.P_c - const.k_O * R_OL
+    phi_base = max(0.0, min(0.8, phi_base))
+    phi_t = phi_base * math.exp(-const.k_phi * t_days)
+    return max(0.0, min(0.8, phi_t))
+
+def strengths_t(mix: MixDesign, const: ModelConstants, t_days: float):
+    B_eff = binder_eff(mix, const)
+    phi = porosity_t(mix, const, t_days)
+    m_L, m_S, m_O = mix.m_L, mix.m_S, mix.m_O
+
+    # Asymptotic contributions
+    fc_L_inf = const.C1 * (const.alpha_L * m_L) / (1.0 + const.beta * phi)
+    fc_O_inf = const.C1 * (const.alpha_O * m_O) / (1.0 + const.beta * phi)
+
+    # Time evolution
+    fc_L_t = fc_L_inf * (1.0 - math.exp(-const.k_L * t_days))
+    fc_O_t = fc_O_inf * (1.0 - math.exp(-const.k_O_poly * t_days))
+    fc_t = fc_L_t + fc_O_t
+
+    if B_eff > 0:
+        mineral_frac = m_L / B_eff
+        organic_frac = (m_O + m_S) / B_eff
+    else:
+        mineral_frac = organic_frac = 0.0
+
+    ff_inf = const.C2 * (mineral_frac + const.gamma * organic_frac)
+    ff_t = ff_inf * (1.0 - math.exp(-const.k_flex * t_days))
+
+    return fc_t, ff_t, phi, B_eff
+
+def failure_palette(fc: float, ff: float, phi: float, organic_frac: float) -> Dict[str, float]:
+    # Normalize inputs for simple rule-based scoring
+    fc_n = fc / (fc + 10.0)  # arbitrary normalization
+    ff_n = ff / (ff + 10.0)
+    phi_n = phi
+    org_n = organic_frac
+
+    brittle = max(0.0, fc_n * (1.0 - ff_n) * (1.0 - org_n) * (1.0 - phi_n))
+    ductile = max(0.0, ff_n * org_n * (1.0 - phi_n))
+    micro = max(0.0, phi_n * (fc_n + ff_n) / 2.0)
+    delam = max(0.0, org_n * phi_n * (1.0 - fc_n))
+    creep = max(0.0, org_n * (1.0 - fc_n) * (1.0 - ff_n))
+
+    total = brittle + ductile + micro + delam + creep
+    if total > 0:
+        scale = 1.0 / total
+    else:
+        scale = 1.0
+
+    return {
+        "brittle": brittle * scale,
+        "ductile": ductile * scale,
+        "micro_crack": micro * scale,
+        "delam": delam * scale,
+        "creep": creep * scale,
+    }
+
+def classify_failure(palette: Dict[str, float]) -> str:
+    return max(palette.items(), key=lambda kv: kv[1])[0]
+
+def render_material(mix: MixDesign, const: ModelConstants, t_days: float) -> Dict[str, object]:
+    fc, ff, phi, B_eff = strengths_t(mix, const, t_days)
+    m_L, m_S, m_O = mix.m_L, mix.m_S, mix.m_O
+    organic_frac = (m_O + m_S) / B_eff if B_eff > 0 else 0.0
+    R_SL, R_OL, R_OS = compute_ratios(mix)
+
+    palette = failure_palette(fc, ff, phi, organic_frac)
+    dominant = classify_failure(palette)
+
+    return {
+        "time_days": t_days,
+        "m_L": m_L,
+        "m_S": m_S,
+        "m_O": m_O,
+        "R_SL": R_SL,
+        "R_OL": R_OL,
+        "R_OS": R_OS,
+        "phi": phi,
+        "B_eff": B_eff,
+        "fc_MPa": fc,
+        "ff_MPa": ff,
+        "organic_frac": organic_frac,
+        "failure_palette": palette,
+        "dominant_failure": dominant,
+    }
+
+def print_render(label: str, render: Dict[str, object]):
+    print(f"=== {label} @ t={render['time_days']} days ===")
+    print(f"Mix: m_L={render['m_L']:.3f}, m_S={render['m_S']:.3f}, m_O={render['m_O']:.3f}")
+    print(f"Ratios: R_SL={render['R_SL']:.3f}, R_OL={render['R_OL']:.3f}, R_OS={render['R_OS']:.3f}")
+    print(f"Porosity phi={render['phi']:.3f}, B_eff={render['B_eff']:.3f}")
+    print(f"Strengths: fc={render['fc_MPa']:.2f} MPa, ff={render['ff_MPa']:.2f} MPa")
+    print(f"Organic fraction={render['organic_frac']:.3f}")
+    print(f"Dominant failure mode: {render['dominant_failure']}")
+    print("Failure palette:")
+    for k, v in render["failure_palette"].items():
+        print(f"  - {k}: {v:.3f}")
+    print()
+
+def main():
+    const = ModelConstants()
+
+    mixes: List[MixDesign] = [
+        MixDesign(m_L=1.0, m_S=0.3, m_O=0.03, phi0=0.40, P_c=0.2),
+        MixDesign(m_L=1.0, m_S=0.5, m_O=0.10, phi0=0.40, P_c=0.4),
+        MixDesign(m_L=1.0, m_S=0.7, m_O=0.20, phi0=0.40, P_c=0.6),
+        MixDesign(m_L=1.0, m_S=0.8, m_O=0.30, phi0=0.40, P_c=0.8),
+    ]
+    labels = ["Mineral-dominant", "Hybrid balanced", "Organic-rich", "Resin-dominant"]
+    times = [1, 7, 28]  # days
+
+    for label, mix in zip(labels, mixes):
+        for t in times:
+            render = render_material(mix, const, t)
+            print_render(label, render)
+
+if __name__ == "__main__":
+    main()
